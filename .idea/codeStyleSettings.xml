@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectCodeStyleSettingsManager">
+    <option name="PER_PROJECT_SETTINGS">
+      <value>
+        <option name="LINE_SEPARATOR" value="&#10;" />
+        <PHPCodeStyleSettings>
+          <option name="ALIGN_KEY_VALUE_PAIRS" value="true" />
+          <option name="ALIGN_PHPDOC_PARAM_NAMES" value="true" />
+          <option name="ALIGN_PHPDOC_COMMENTS" value="true" />
+          <option name="PHPDOC_BLANK_LINES_AROUND_PARAMETERS" value="true" />
+        </PHPCodeStyleSettings>
+        <XML>
+          <option name="XML_LEGACY_SETTINGS_IMPORTED" value="true" />
+        </XML>
+        <codeStyleSettings language="PHP">
+          <option name="KEEP_FIRST_COLUMN_COMMENT" value="false" />
+          <option name="KEEP_CONTROL_STATEMENT_IN_ONE_LINE" value="false" />
+          <option name="CLASS_BRACE_STYLE" value="1" />
+          <option name="METHOD_BRACE_STYLE" value="1" />
+        </codeStyleSettings>
+        <codeStyleSettings language="yaml">
+          <indentOptions>
+            <option name="INDENT_SIZE" value="4" />
+          </indentOptions>
+        </codeStyleSettings>
+      </value>
+    </option>
+    <option name="USE_PER_PROJECT_SETTINGS" value="true" />
+  </component>
+</project>
+
