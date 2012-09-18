@@ -1,42 +1,116 @@
 <?php
 
-class SolrDemo {
+class Solr {
+
+    /**
+     * Connection details
+     *
+     * @var array
+     */
     private $connectionDetails = '';
 
     private $queryPattern = '';
 
+    /**
+     * The current query
+     *
+     * @var string
+     */
+    private $query = '';
 
+
+    /**
+     * Set the connection details as a DSN
+     *
+     * @param string $connectionDetails
+     *
+     * @return Solr
+     */
     public function setConnection($connectionDetails) {
-        $this->connectionDetails = $connectionDetails;
+        $this->connectionDetails = Solr::parseDSN($connectionDetails);
+
+        return $this;
     }
 
+    /**
+     * Set the fields to perform the query on
+     *
+     * @param array $queryFields
+     *
+     * @return Solr
+     */
     public function setQueryFields($queryFields) {
 
+        return $this;
     }
 
+    /**
+     * Set the query to do the sorting on
+     * The parameter should contain values like (field => direction)
+     *
+     * @param array $orderFields
+     *
+     * @return Solr
+     */
     public function setOrderFields($orderFields) {
 
+        return $this;
     }
 
+    /**
+     * Set the facet fields, if any
+     *
+     * @param array $facetFields
+     *
+     * @return Solr
+     */
     public function setFacetFields($facetFields) {
 
+        return $this;
     }
 
+    /**
+     * Set the fields that we want back from SOLR
+     *
+     * @param array $returnFields
+     *
+     * @return Solr
+     */
     public function setReturnFields($returnFields) {
 
+        return $this;
     }
 
+    /**
+     * Set the query itself
+     *
+     * @param string $query
+     *
+     * @return Solr
+     */
     public function setQuery($query) {
 
+        return $this;
     }
 
+    /**
+     * Get the results of the given query
+     *
+     * @param int $page
+     * @param int $resultsPerPage
+     *
+     * @return array
+     */
     public function getResults($page = 0, $resultsPerPage = 0) {
 
+        return array();
     }
 
     /**
      * Fetch a page
+     *
      * @param string $url
+     *
      * @return array
      */
     private function fetchURL($url) {
