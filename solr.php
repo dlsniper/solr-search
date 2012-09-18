@@ -1,34 +1,116 @@
 <?php
 
-$query = 'http://devel.site:8080/solr-example/core0/select?';
-$params = array(
-    "wt" => "json",
-    "indent" => "on",
-    "q" => "G700",
-    "start" => "0",
-    "rows" => "10",
-    "fl" => "id,score,type,exact_title,exact_part_number,description",
+class SolrDemo {
+    private $connectionDetails = '';
 
-//    "fq" => "category_id:91",
-//    "fq" => "main_category_id:(\"452\")",
-//    "fq" => "filter:((\"1938-y-2771\"))",
-//    "fq" => "price:[1500 TO 2000]",
-//    "fq" => "is_rsg:0",
-//    "fq" => "type:product",
-//    "defType" => "dismax",
-//    "mm" => "50%",
-//    "qf" => "exact_title^3 exact_part_number^2",
-
-);
+    private $queryPattern = '';
 
 
-echo $query . http_build_query($params);
-echo "\n\n";
+    public function setConnection($connectionDetails) {
+        $this->connectionDetails = $connectionDetails;
+    }
 
-//query:"{!dismax qf=searchText bq='(: -siteId:1 -siteId:2 -siteId:16)^1.5 OR canEmbed:1^1.005'}lesbian"
+    public function setQueryFields($queryFields) {
 
-$search = "http://dev-sk.freeporn.com/florin/solrbj.php?q={!boost+b%3Drecip%28ms%28NOW%2CdateAdded%29%2C3.16e-1%2C1%2C1%29}canEmbed%3A%280^0.1+OR+1^1000%29+AND+searchText%3A%28eva+and+angelina%29&start=0&rows=100";
-parse_str($search,  $searchArr);
-echo '<pre>';
-print_r($searchArr);
-echo '</pre>';
+    }
+
+    public function setOrderFields($orderFields) {
+
+    }
+
+    public function setFacetFields($facetFields) {
+
+    }
+
+    public function setReturnFields($returnFields) {
+
+    }
+
+    public function setQuery($query) {
+
+    }
+
+    public function getResults($page = 0, $resultsPerPage = 0) {
+
+    }
+
+    /**
+     * Fetch a page
+     * @param string $url
+     * @return array
+     */
+    private function fetchURL($url) {
+        $curlOptions = array(
+            CURLOPT_RETURNTRANSFER => true, // return web page
+            CURLOPT_HEADER         => false, // don't return headers
+            CURLOPT_FOLLOWLOCATION => true, // follow redirects
+            CURLOPT_ENCODING       => "", // handle all encodings
+            CURLOPT_USERAGENT      => "SOLR parser 1.0", // who am i but a ghost
+            CURLOPT_AUTOREFERER    => true, // set referer on redirect
+            CURLOPT_CONNECTTIMEOUT => 1, // timeout on connect
+            CURLOPT_TIMEOUT        => 1, // timeout on response
+            CURLOPT_MAXREDIRS      => 2, // stop after 10 redirects
+            //CURLOPT_ENCODING       => "deflate, gzip, x-gzip, identity, *;q=0", //
+        );
+
+
+        // cURL magic
+        $ch = curl_init($url);
+        curl_setopt_array($ch, $curlOptions);
+        $content = curl_exec($ch);
+        $err = curl_errno($ch);
+        $errmsg = curl_error($ch);
+        $header = curl_getinfo($ch);
+        curl_close($ch);
+
+        // Assign the values we are going to return
+        $result['errno'] = $err;
+        $result['errmsg'] = $errmsg;
+        $result['header'] = $header;
+        $result['content'] = $content;
+
+        // Return the results
+        return $result;
+    }
+
+    /**
+     * Parse the connection DSN to a configuration array
+     * A DSN should look like this: solr://guest:guest@192.168.1.72:5672/vhost/promotions#save
+     * Note the double '//' before promotion can be used to describe no name for the vhosts
+     *
+     * @static
+     *
+     * @param string $dsn
+     *
+     * @return array
+     */
+    static public function parseDSN($dsn) {
+        if (is_array($dsn)) {
+            return $dsn;
+        }
+
+        preg_match('/(?<protocol>\w+):\/\/(?<username>\w+):(?<password>\w+)@(?<hostname>(\w|\.)+):(?<port>\d+)(?<vhost>(\w|\/)+)\/(?<exchange>(\w|.)+)(#(?<queue>(\w|.)+))?/iu', $dsn, $matches);
+
+        // Leave only the named parameters inside the array
+        foreach($matches as $key => $value) {
+            if (is_numeric($key)) {
+                unset($matches[$key]);
+            }
+        }
+
+        $defaults = array(
+            'protocol' => '',
+            'username' => '',
+            'password' => '',
+            'hostname' => '',
+            'port'     => '',
+            'vhost'    => '',
+            'exchange' => '',
+            'queue'    => '',
+        );
+
+        $matches = array_merge($defaults, $matches);
+
+        return $matches;
+    }
+}

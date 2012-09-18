@@ -18,16 +18,20 @@ class solrSearch {
      * @return array
      */
     private function fetchURL($url) {
-        $curlOptions = array(CURLOPT_RETURNTRANSFER => true, // return web page
-            CURLOPT_HEADER => false, // don't return headers
+        $curlOptions = array(
+            CURLOPT_RETURNTRANSFER => true, // return web page
+            CURLOPT_HEADER         => false, // don't return headers
             CURLOPT_FOLLOWLOCATION => true, // follow redirects
-            CURLOPT_ENCODING => "", // handle all encodings
-            CURLOPT_USERAGENT => "SOLR parser 1.0", // who am i but a ghost
-            CURLOPT_AUTOREFERER => true, // set referer on redirect
+            CURLOPT_ENCODING       => "", // handle all encodings
+            CURLOPT_USERAGENT      => "SOLR parser 1.0", // who am i but a ghost
+            CURLOPT_AUTOREFERER    => true, // set referer on redirect
             CURLOPT_CONNECTTIMEOUT => 1, // timeout on connect
-            CURLOPT_TIMEOUT => 1, // timeout on response
-            CURLOPT_MAXREDIRS => 2); // stop after 10 redirects
-        //CURLOPT_ENCODING       => "deflate, gzip, x-gzip, identity, *;q=0", //
+            CURLOPT_TIMEOUT        => 1, // timeout on response
+            CURLOPT_MAXREDIRS      => 2, // stop after 10 redirects
+            //CURLOPT_ENCODING       => "deflate, gzip, x-gzip, identity, *;q=0", //
+        );
+
+
         // cURL magic
         $ch = curl_init($url);
         curl_setopt_array($ch, $curlOptions);
@@ -119,25 +123,37 @@ class solrSearch {
             echo $terms .= ")";
         } else {
             $query = "title:" . $terms . "^" . $priorities['ORtitle'] . " OR description:" . $terms . "^" . $priorities['ORdesc'] . " OR tags:" . $terms . "^" . $priorities['ORtags'];
-            $terms = "(" . $terms . ")";
+            $terms = "(" . $query . ")";
         }
 
         return $terms;
     }
 
-    public function __construct($query = '*', $category = 'all', $rows = 35, $pageNumber = 1, $orientation = '', $production = 'all', $rating = 'all', $date = 'all', $order = 'relevance', $video_type = 'all', $mlt = false) {
+    public function getURL() {
+        return 'demo';
+    }
+
+    public function __construct($query = '*', $category = 'all', $rows = 35, $pageNumber = 1, $orientation = '', $production = 'all', $rating = 'all', $date = 'all', $order = 'relevance', $video_type = 'all') {
         $this->pageNumber = $pageNumber;
         $this->perPage = $rows;
         $start = $pageNumber * $rows - $rows;
 
+        if (strlen($query) == 0) {
+            $query = "*";
+        }
+
         $cols = array(
             'id',
-                //  'category',
-                //  'title',
-                //  'description',
-                //  'tags',
-                //  'score'
+            //'category',
+            //'title',
+            //'description',
+            //'tags',
+            //'score'
         );
+
+        /**/
+        $quer = $this->termsParser($query);
+        /** /
 
         $priorities = array(
             'ANDtitle' => 20,
@@ -148,66 +164,42 @@ class solrSearch {
             'ORtags' => 1,
         );
 
-        if (strlen($query) == 0) {
-            $query = "*";
-        }
+        $query = strtolower($query);
+        $query = preg_replace('%[ -_]%', ' ',$query);
+        $terms = explode(' ', $query);
+        if (count($terms) > 1 && strlen($query) > 0) {
+            $ANDterms = '(' . implode(' AND ', $terms) . ')';
+            $ORterms = '(' . implode(' OR ', $terms) . ')';
 
-        if ($mlt) {
-            $query = "id:" . $query;
+            $query = "title:" . $ANDterms . "^" . $priorities['ANDtitle'] . " OR description:" . $ANDterms . "^" . $priorities['ANDdesc'] . " OR tags:" . $ANDterms . "^" . $priorities['ANDtags'];
+            $query .= " OR ";
+            $query .= "title:" . $ORterms . "^" . $priorities['ORtitle'] . " OR description:" . $ORterms . "^" . $priorities['ORdesc'] . " OR tags:" . $ORterms . "^" . $priorities['ORtags'];
         } else {
-            /** /
-              $quer = $this->termsParser($query);
-              /* */
-            $query = strtolower($query);
-            $query = preg_replace('%[ -_]%', ' ',$query);
-            $terms = explode(' ', $query);
-            if (count($terms) > 1 && strlen($query) > 0) {
-                $ANDterms = '(' . implode(' AND ', $terms) . ')';
-                $ORterms = '(' . implode(' OR ', $terms) . ')';
-
-                $query = "title:" . $ANDterms . "^" . $priorities['ANDtitle'] . " OR description:" . $ANDterms . "^" . $priorities['ANDdesc'] . " OR tags:" . $ANDterms . "^" . $priorities['ANDtags'];
-                $query .= " OR ";
-                $query .= "title:" . $ORterms . "^" . $priorities['ORtitle'] . " OR description:" . $ORterms . "^" . $priorities['ORdesc'] . " OR tags:" . $ORterms . "^" . $priorities['ORtags'];
-            } else {
-                $query = "title:" . $terms[0] . "^" . $priorities['ORtitle'] . " OR description:" . $terms[0] . "^" . $priorities['ORdesc'] . " OR tags:" . $terms[0] . "^" . $priorities['ORtags'];
-            }
-
-            $query = "(" . $query . ")";
-            /**/
+            $query = "title:" . $terms[0] . "^" . $priorities['ORtitle'] . " OR description:" . $terms[0] . "^" . $priorities['ORdesc'] . " OR tags:" . $terms[0] . "^" . $priorities['ORtags'];
         }
+
+        $query = "(" . $query . ")";
+        /**/
 
         $columns = implode('%2C', $cols);
 
-        if ($category != 'all')
-            $query .= ' AND category:' . $category;
-        if ($orientation != 'all')
-            $query .= ' AND orientation:' . $orientation;
-        if ($production != 'all')
-            $query .= ' AND production:' . $production;
-        //if($rating      != 'all') $query .= ' AND rating:[' . $rating . ' TO *]';
-        if ($date != 'all')
-            $query .= ' AND video_date:[' . $date . ' TO NOW]';
-        if ($video_type != 'all')
-            $query .= ' AND video_type:' . $video_type;
         if ($order == 'relevance')
             $order = 'score';
 
         // boost by rating
-        if ($rating == 'all')
-            $rating = 0;
-        // Rating search is temporarely overridden
-        $query .= ' AND rating:([0 TO 3]^0.1 OR [3 TO 4]^5 OR [4 TO 5]^10)';
+        if ($rating == 'all') {
+
+            // Rating search is temporarely overridden
+            $query .= ' AND rating:([0 TO 3]^0.1 OR [3 TO 4]^5 OR [4 TO 5]^10)';
+        }
 
         $query = urlencode($query);
 
-        $url = "http://209.239.175.38:8080/solr/freeporn/select/?q=" . $query;
+        $url = $this->getURL() . "/select/?q=" . $query;
         $url .= "&version=2.2&start=" . $start . "&rows=" . $rows;
         $url .= "&wt=json&fl=" . $columns;
         $url .= "&sort=" . $order . "%20desc";
-        if (!$mlt)
-            $url .= "&facet=true&facet.mincount=1&facet.limit=100&facet.field=category&facet.field=orientation&facet.field=production&facet.field=video_type";
-        else
-            $url .= "&mlt=true&mlt.fl=spell&mlt.count=10";
+        $url .= "&facet=true&facet.mincount=1&facet.limit=100&facet.field=category&facet.field=orientation&facet.field=production&facet.field=video_type";
 
         $results = $this->fetchURL($url);
 
@@ -217,30 +209,10 @@ class solrSearch {
 
         $this->json = json_decode($results['content']);
 
-        if ($mlt) {
-            $query = explode("+AND", $query);
-            $id = str_replace('id%3A', '', $query[0]);
-
-            $docs = $this->json->moreLikeThis->$id->docs;
-
-            $solrIDS = array();
-            foreach ($docs as $doc => $id) {
-                $solrIDS[] = $id->id;
-            }
-
-            $this->query = Doctrine::getTable('Video')->createQuery('b')
-                    ->select('b.*, FIELD(b.id, ' . implode(",", $solrIDS) . ') AS field')
-                    ->where('id in ?', array($solrIDS))
-                    ->useResultCache(true)->setResultCacheLifeSpan(300)
-                    ->orderBy('field');
-
-            return $this->query;
-        }
-
         $docs = $this->json->response->docs;
 
         if (count($docs) < 1) {
-            return false;
+            return array();
         }
 
         $facets = json_decode($results['content'], true);
@@ -262,83 +234,11 @@ class solrSearch {
         unset($facets2);
 
         $solrIDS = array();
-        foreach ($docs as $doc => $id) {
+        foreach ($docs as $id) {
             $solrIDS[] = $id->id;
         }
 
-        $this->query = Doctrine::getTable('Video')->createQuery('b')
-                ->select('b.*, FIELD(b.id, ' . implode(",", $solrIDS) . ') AS field')
-                ->where('id in ?', array($solrIDS))
-                ->useResultCache(true)->setResultCacheLifeSpan(300)
-                ->orderBy('field');
-
-        return $this->query;
-    }
-
-    public function execute() {
-        return $this->query->execute();
-    }
-
-    public function getNumResults() {
-        return $this->json->response->numFound;
-    }
-
-    public function getPreviousPage() {
-        return max($this->pageNumber - 1, 1);
-    }
-
-    public function getPage() {
-        return $this->pageNumber;
-    }
-
-    public function getExecuted() {
-        return true;
-    }
-
-    public function getLastPage() {
-        return ceil($this->getNumResults() / $this->perPage);
-    }
-
-    public function getNextPage() {
-        return min($this->getPage() + 1, $this->getLastPage());
-    }
-
-    public function getPagerLayout($url_var, $path=null, $override_url=false) {
-        if ($override_url === false) {
-            require_once('skeletor/smarty_plugins/function.modify_url.php');
-            $null = array();
-            $opts = array($url_var => 'PAGE_NUMBER');
-            if ($path != null)
-                $opts['_path'] = $path;
-            $url_format = smarty_function_modify_url($opts, $null);
-            $url_format = str_replace('PAGE_NUMBER', '{%page_number}', $url_format);
-        } else {
-            $url_format = $override_url;
-        }
-        $pagerLayout = new SKEL_Pager_Layout($this,
-                        new Doctrine_Pager_Range_Sliding(array('chunk' => 5)),
-                        $url_format
-        );
-        //default skel paging templates
-        $pagerLayout->setTemplate('<li><a href="{%url}">{%page}</a></li>');
-        $pagerLayout->setSelectedTemplate('<li><span class="active">{%page}</span></li>');
-        return $pagerLayout;
-    }
-
-    function getPagerLayoutSeoFp($override_url=false) {
-        if ($override_url === false) {
-            $url_format = Utils_General_Uri::getSefPagerUrl();
-        } else {
-            $url_format = $override_url;
-        }
-        $pagerLayout = new SKEL_Pager_Layout($this,
-                        new Doctrine_Pager_Range_Sliding(array('chunk' => 5)),
-                        $url_format
-        );
-        //default skel paging templates
-        $pagerLayout->setTemplate('<li><a href="{%url}">{%page}</a></li>');
-        $pagerLayout->setSelectedTemplate('<li><span class="active">{%page}</span></li>');
-        return $pagerLayout;
+        return $solrIDS;
     }
 
 }
